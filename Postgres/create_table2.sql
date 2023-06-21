@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS public.apod
+(
+    id SERIAL PRIMARY KEY,
+	date DATE NOT NULL,
+	explanation TEXT NOT NULL,
+	hdurl VARCHAR(500) NOT NULL,
+	media_type VARCHAR(500) NOT NULL,
+	service_version VARCHAR(500) NOT NULL,
+	title VARCHAR(500) NOT NULL,
+	url VARCHAR(500) NOT NULL
+);
