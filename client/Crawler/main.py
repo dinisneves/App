@@ -10,56 +10,87 @@ connection = psycopg2.connect(
     password="123"
 )
 
-# Make a GET request to retrieve movie data from the API
-response = requests.get("https://the-one-api.dev/v2/movie", headers={"Authorization": "Bearer qxdqyRuBKfeifCyAd7Ir"})
+# Function to fetch and insert data into the database
+def insert_data(url, table_name, columns):
+    response = requests.get(url, headers={"Authorization": "Bearer qxdqyRuBKfeifCyAd7Ir"})
+
+    if response.status_code == 200:
+        data = response.json()["docs"]
+
+        # Iterate over the retrieved data and insert them into the database
+        for item in data:
+            values = []
+            for column in columns:
+                values.append(item[column])
+
+            # Create a cursor and execute an SQL INSERT statement
+            cursor = connection.cursor()
+            cursor.execute(
+                f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({', '.join(['%s'] * len(columns))})",
+                values
+            )
+
+        # Commit the changes and close the cursor
+        connection.commit()
+        cursor.close()
+    else:
+        print(f"Error: Failed to fetch data from {url}")
 
 
+# Insert movies data into the database
+insert_data(
+    "https://the-one-api.dev/v2/movie",
+    "movies",
+    ["_id", "name", "runtimeInMinutes", "budgetInMillions", "boxOfficeRevenueInMillions", "academyAwardNominations",
+     "academyAwardWins", "rottenTomatoesScore"]
+)
 
-if response.status_code == 200:
-    data = response.json()["docs"]
+# Insert characters data into the database
+insert_data(
+    "https://the-one-api.dev/v2/character",
+    "characters",
+    ["_id", "name"]
+)
 
-    # Iterate over the retrieved movies and insert them into the database
-    for movie in data:
-        movieId = movie["_id"];
-        title = movie["name"]
-        runtimeMinutes = movie["runtimeInMinutes"]
-        budgetM = movie["budgetInMillions"]
-        boxOfficeM = movie["boxOfficeRevenueInMillions"]
-        awardNominations = movie["academyAwardNominations"]
-        awardWins = movie["academyAwardWins"]
-        rtScore = movie["rottenTomatoesScore"]
+# Insert quotes data into the database
+insert_data(
+    "https://the-one-api.dev/v2/quote",
+    "quotes",
+    ["_id", "dialog"]
+)
 
-        # Create a cursor and execute an SQL INSERT statement
-        cursor = connection.cursor()
-        cursor.execute(
-            "INSERT INTO movies (movieId, title, runtimeMinutes, budgetM, boxOfficeM, awardNominations, awardWins, rtScore) "
-            "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-            (movieId, title, runtimeMinutes, budgetM, boxOfficeM, awardNominations, awardWins, rtScore)
-        )
-
-    # Commit the changes and close the cursor
-    connection.commit()
-    cursor.close()
-else:
-    print("Error: Failed to fetch data from the API.")
-
-"""
-
-# Create a cursor object to interact with the database
+# Fetch and display the movies data
 cursor = connection.cursor()
-
-# Table name to fetch data from
 table_name = "movies"
-
-# Fetch data from the table
 query = f"SELECT * FROM {table_name}"
 cursor.execute(query)
 rows = cursor.fetchall()
 
-# Display the fetched data
+print(f"--- {table_name} ---")
+for row in rows:
+    print(row)
+
+# Fetch and display the characters data
+table_name = "characters"
+query = f"SELECT * FROM {table_name}"
+cursor.execute(query)
+rows = cursor.fetchall()
+
+print(f"\n--- {table_name} ---")
+for row in rows:
+    print(row)
+
+# Fetch and display the quotes data
+table_name = "quotes"
+query = f"SELECT * FROM {table_name}"
+cursor.execute(query)
+rows = cursor.fetchall()
+
+print(f"\n--- {table_name} ---")
 for row in rows:
     print(row)
 
 # Close the cursor and connection
 cursor.close()
-connection.close()"""
+connection.close()
+ 

@@ -1,0 +1,48 @@
+pipeline {
+  agent any
+  
+  stages {
+    stage('Clone repository') {
+      steps {
+        // Clone the GitHub repository
+        git branch: 'main', url: 'https://github.com/dinisneves/App.git'
+      }
+    }
+    
+    stage('Build and push Docker image') {
+      steps {
+        // Build the Docker image and tag it
+        script {
+          def imageName = "pedrosousa97/postgres-example"
+          def imageTag = "latest"
+          def dockerfile = "/var/jenkins_home/workspace/dockerhubPush/Postgres/"
+          
+          docker.withRegistry('', 'bb2376d9-8875-40a7-b8ed-fa385d0e240e') {
+            def customImage = docker.build(imageName + ":" + imageTag, "${dockerfile}")
+            
+            // Push the image to Docker Hub
+            customImage.push()
+          }
+        }
+      }
+    }
+    
+    stage('Build and Push crawler image'){
+        steps {
+        // Build the Docker image and tag it
+        script {
+          def imageName = "pedrosousa97/crawler-example"
+          def imageTag = "latest"
+          def dockerfile = "/var/jenkins_home/workspace/dockerhubPush/client/Crawler/"
+          
+          docker.withRegistry('', 'bb2376d9-8875-40a7-b8ed-fa385d0e240e') {
+            def customImage = docker.build(imageName + ":" + imageTag, "${dockerfile}")
+            
+            // Push the image to Docker Hub
+            customImage.push()
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+---
+- name: Install Docker containers
+  hosts: local
+  become: true
+  become_user: pedro
+  vars:
+    ansible_become_pass: Escola11
+
+  tasks:
+    - name: Pull Postgres image from Dockerhub
+      docker_image:
+        name: pedrosousa97/postgres-example:latest
+        source: pull
+
+    - name: Pull Web Crawler image from Dockerhub
+      docker_image:
+        name: pedrosousa97/crawler-example:latest
+        source: pull
+
+    - name: Create Postgres container
+      docker_container:
+        name: postgres-container
+        image: pedrosousa97/postgres-example:latest
+        state: started
+        ports:
+          - "5432:5432"
+        volumes:
+          - db_data:/var/lib/postgres/data
+      notify:
+        - Create Crawler container
+
+  handlers:
+
+    - name: Create Crawler container
+      docker_container:
+        name: crawler-container
+        image: pedrosousa97/crawler-example:latest
+        state: started
+        ports:
+          - "2345:2345"
+        volumes:
+          - crawler_data:/var/lib/crawler/data
